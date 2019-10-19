@@ -1,0 +1,31 @@
+#include<iostream>
+using namespace std;
+void input(char No[], char Name[], char School[], char Class[]);
+void output(char No[], char Name[]);
+void output(char* School[], char* Class[]);
+int main()
+{
+	char No[100];
+	char Name[100];
+	char School[100];
+	char Class[100];
+	int i = 0;
+	for (;;i++) {
+		cout << "please write this information:Number,Name,School, Class" << endl;
+		input(No, Name, School, Class);
+		output(No, Name);
+		output(School, Class);
+	}
+}
+void input(char No[], char Name[], char School[], char Class[])
+{
+	cin >> No >> Name >> School >> Class;
+}
+void output(char No[], char Name[])
+{
+	cout << "The number is: " << No << "  The name is: " << Name << endl;
+}
+void output(char* School[], char* Class[])
+{
+	cout << "The school is: " << School << "  The class is: " << Class << endl;
+}
