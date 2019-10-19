@@ -1,0 +1,45 @@
+#include<iostream>
+#include<sstream>//字符串流头文件
+#include<string>
+using namespace std;
+class Myinteger {
+private:
+	int value;
+public:
+	Myinteger(int v=1);//默认参数构造函数
+	int get()const;
+	int addition(Myinteger n);//利用对象进行添加
+	int parselnt(const string& x);//常量字符串传递
+};//类
+Myinteger::Myinteger(int v)
+{
+	value = v;
+}
+int Myinteger::get()const
+{
+	return value;
+}
+int Myinteger::addition(Myinteger n)
+{
+	int b = this->value +n.value;//利用指针传值
+	return b;
+}
+int Myinteger::parselnt(const string& x)
+{
+	stringstream xx;//字符串流
+	int y;
+	xx << x;
+	xx >> y;
+	return y;
+}
+int main()
+{
+	Myinteger A=Myinteger(1);
+	A.get();
+	A.addition(8);
+	A.parselnt("2000");
+	cout <<"\n"<< A.get();
+	cout <<"\n"<< A.addition(8);
+	cout <<"\n"<< A.parselnt("2000") << endl;
+	return 0;
+}
