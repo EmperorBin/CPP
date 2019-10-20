@@ -1,0 +1,185 @@
+#include<iostream>
+#include<string>
+#include<ctime>
+#include<cstdlib>
+#include<vector>
+using namespace std;
+static int egn = 0;//初始化眼睛颜色为绿色
+static int ebln = 0;//蓝色
+static int ebrn = 0;//棕色
+static int fbln = 0;//初始化毛发颜色为黑色
+static int fgn = 0;//灰色
+static int fbrn = 0;//棕色
+static int fln = 0;//长毛
+static int fsn = 0;//短毛
+int random2()//随机长短
+{
+return rand() % 2 + 1;
+}
+int random3()//随机颜色
+{
+return rand() % 3 + 1;
+}
+string eyecolur()
+{
+switch (random3())
+{
+case 1:
+egn++;
+return "绿色";
+case 2:
+ebln++;
+return "蓝色";
+case 3:
+ebrn++;
+return "棕色";
+}
+}
+string furcolur()
+{
+switch (random3())
+{
+case 1:
+fbln++;
+return "黑色";
+case 2:fgn++;
+return "灰色";
+case 3:fbrn++;
+return "棕色";
+}
+}
+string furlength()
+{
+switch (random2())
+{
+case 1:fln++;
+return "长毛";
+case 2:fsn++;
+return "短毛";
+break;
+}
+}
+class cat//定义猫类
+{
+public:
+cat();
+void outputxx();
+private:
+string ec, fc, fl;
+};
+cat::cat()
+{
+ec = eyecolur();
+fc = furcolur();
+fl = furlength();
+}
+void cat::outputxx()
+{
+cout << fc << "\t" << ec << "\t" << fl;
+}
+//布尔函数判断
+bool catnum2(int, int, int);
+bool catnum3(int, int, int);
+bool eyenum2(int, int, int);
+class cage//定义猫笼的类
+{
+public:
+void output();
+void setcat();
+void check();
+private:
+vector<cat> c;//往向量容器里加猫
+static int count;
+};
+int cage::count = 0;
+void cage::setcat()//往容器里放猫
+{
+cat CAT;
+count++;
+c.push_back(CAT);
+}
+void cage::output()//进行循环加猫，输出
+{
+for (int i = 0; i < count; i++)
+{
+c[i].outputxx();
+cout << endl;
+}
+}
+void cage::check()//检查打架情况
+{
+switch (cage::count)
+{
+case 1:cout << "没有打架" << endl; break;
+case 2: if (catnum2(fbln, fgn, fbrn))
+{
+if (eyenum2(egn, ebln, ebrn)) {
+cout << "没有打架" << endl;
+}
+else
+{
+cout << "打架" << endl;
+}
+}
+else
+{
+cout << "没有打架" << endl;
+}break;
+default:if (catnum3(fbln, fgn, fbrn))
+{
+cout << "没有打架" << endl;
+}
+else
+{
+cout << "打架";
+}
+break;
+}
+
+}
+bool catnum2(int a, int b, int c)
+{
+if (a == c || c == b)
+{
+return true;
+}
+else
+{
+return false;
+}
+}
+bool catnum3(int a, int b, int c)
+{
+if (a == b && b == c || (a == b && c == 0) || (a == c && b == 0) || (b == c && a == 0) || a == 0 && b == 0 || b == 0 && c == 0 || a == 0 && c == 0)
+{
+return true;
+}
+else
+{
+return false;
+}
+}
+bool eyenum2(int a, int b, int c)
+{
+if (a == b && b == 0 || a == c && c == 0 || b == c && c == 0)
+{
+return true;
+}
+else
+{
+return false;
+}
+}
+int main()
+{
+srand((int)time(0));//随机数生成器，初始函数，分配种子
+cage A;
+cout << "请按回车键输入猫\n" << "毛发颜色" << " " << "眼睛颜色" << " " << "毛发长短" << endl;
+while (cin.get())
+{
+A.setcat();
+A.output();
+A.check();
+}
+return 0;
+}
