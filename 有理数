@@ -1,0 +1,91 @@
+#include<iostream>
+#include<math.h>
+using namespace std;
+class Rational 
+{
+private:
+	int  numerator;
+	int denominator;
+public:
+	Rational();
+	Rational(int a, int b);
+	friend ostream& operator<<(ostream&,Rational&);
+	Rational operator-();
+	Rational operator+(const int);
+	friend Rational operator+(const int, Rational&);
+	Rational& operator++(int);
+	operator double();
+	double SUM(Rational T, Rational K)
+	{
+		double euler = 0.5772;
+		int x = K.denominator;
+		double y = x- euler - log(x);
+		return y;
+	}//因为本题所求为调和级数，即∑n/(n+1),等于n-∑1/(n+1)
+	//后一个级数近似公式为ln(n+1)+c,c为欧拉初始，等于0.57722
+	//本题为50-（ln50+0.57722)
+};
+Rational::Rational()
+{
+	numerator = 4;
+	denominator = 5;
+}
+Rational::Rational(int a, int b)
+{
+	numerator = a;
+	denominator = b;
+}
+ostream& operator<<(ostream&out, Rational&t)
+{
+	if (t.denominator != 0)
+	{
+		out << t.numerator << "/" << t.denominator;
+		return out;
+	}
+}
+Rational Rational::operator-()
+{
+	return Rational(-numerator ,denominator);
+}
+Rational Rational::operator+(const int x)
+{
+	Rational q;
+	q.numerator = this->numerator + x * this->denominator;
+	q.denominator = this->denominator;
+	return q;
+}
+Rational operator+(const int a, Rational& b)
+{
+	Rational y;
+	y.numerator = a*b.denominator + b.numerator;
+	y.denominator = b.denominator;
+	return y;
+}
+Rational& Rational::operator++(int)
+{
+	*this = *this + 1;
+	return *this;
+}
+Rational::operator double()
+{
+	double p = numerator;
+	double q = denominator;
+	return p / q;
+}
+int main() 
+{ 
+	Rational rat0; 
+    cout << rat0 << endl; 
+    Rational rat1 = -rat0; 
+    cout << rat1 << endl; 
+    Rational rat2 = rat1 + 34;  
+    cout << rat2 << endl;
+    Rational rat3;
+    rat3 = 12 + rat2; 
+    rat3++;
+    cout << rat3 << endl; 
+    cout << (double)rat3 << endl;
+	Rational T(1,2);
+	Rational K(49, 50);
+	cout << T.SUM(T, K);
+}
