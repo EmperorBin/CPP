@@ -1,0 +1,107 @@
+#include<iostream>
+#include<string>
+using namespace std;
+class Account
+{
+public:
+	string accountnumber;
+	double balance;
+	double rate;
+	string date;
+	Account(string a, double b, double r, string d);
+	void deposit(double a)
+	{
+		balance += a;
+	}
+	void withdraw(double a)
+	{
+		balance -= a;
+	}
+	void window()
+	{
+		cout << accountnumber << "   " << balance << "   " << rate << "   " << date<<endl;
+	}
+	double getbalance()
+	{
+		return balance;
+	}
+	string toString() { }
+};
+Account::Account(string a = "180405101", double b = 1314.52, double r = 0.0075, string d = "2000年1月8日")
+{
+	accountnumber = a;
+	balance = b;
+	rate = r;
+	date = d;
+}
+class checking :public Account
+{
+public:
+	double limit;
+	checking(string a, double b, double r, string d, double l);
+	void withdraw(double a)
+	{
+		Account::withdraw(a);
+		if (getbalance() < -limit)
+		{
+			cout << "超出透支额度，无法取出。"<<endl;
+		}
+		else
+			cout << "余额：" << getbalance()<<endl;
+	}
+	string toString()
+	{
+		string x;
+		x = this->accountnumber + to_string(this->balance);
+		cout << this->accountnumber << "   "<< to_string(this->balance )<<endl;
+		return x;
+	}
+};
+checking::checking(string a="180405101", double b=2000, double r=0.0075, string d="2018年5月20日",double l=2000):Account(a,b,r,d),limit(l){}
+class saving :public Account
+{
+public:
+	saving(string a, double b, double r, string d);
+	void withdraw(double a)
+	{
+		Account::withdraw(a);
+		if (getbalance() < 0)
+		{
+			cout << "超出额度，无法取钱。"<<endl;
+		}
+		else
+			cout << "余额：" << getbalance()<<endl;
+	}
+	string toString()
+	{
+		string x;
+		x = this->accountnumber + to_string( this->balance);
+		cout << this->accountnumber <<"  "<< to_string(this->balance) <<endl;
+		return x;
+	}
+};
+saving::saving(string a="180405101", double b=1200, double r=0.0075, string d="2019年7月14日") :Account(a, b, r, d) {};
+int main()
+{
+	cout << "银行账户系统"<<endl;
+	cout << "账号        余额      年利率    处理日期" << endl;
+	Account x;
+	x.window();
+	x.deposit(2000);
+	x.window();
+	x.withdraw(4000);
+	x.window();
+	cout << "\n支票账户：" << endl;
+	checking y;
+	y.window();
+	y.withdraw(4001);
+	y.window();
+	y.toString();
+	cout << "\n储蓄账户:" << endl;
+	saving z;
+	z.window();
+	z.withdraw(1100);
+	z.window();
+	z.toString();
+}
+
