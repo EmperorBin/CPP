@@ -1,0 +1,108 @@
+#include<iostream>
+#include<string>
+using namespace std;
+class NewBee
+{
+public:
+	int ID;
+	string name;
+	string course;
+	int shour;
+	NewBee(int i=0,string n="",string c="",int s=0)
+	{
+		ID = i;
+		name = n;
+		course = c;
+		shour = s;
+	}
+	void displaying()
+	{
+		cout << "";
+	}
+	int salary(int)
+	{
+		return 0;
+	}
+};
+class Teacher:virtual public NewBee
+{
+public:
+	Teacher()
+	{
+		ID = 180405101;
+		name = "王滨";
+	}
+	Teacher(int,string);
+	void displaying()
+	{
+		cout << "ID：" << ID << "   name:" << name<<endl;
+	}
+	int salary(int);
+};
+Teacher::Teacher(int i , string n )
+{
+	ID = i;
+	name = n;
+}
+int Teacher::salary(int a)
+{
+	int sum;
+	sum = 50 *a + 4500;
+	return sum;
+}
+class Student:virtual public NewBee
+{
+public:
+	Student(int i = 180405102, string n = "李孟通", string c = "狗狗自我训练课", int s = 5)
+	{
+		ID = i;
+		name = n;
+		course = c;
+		shour = s;
+	}
+	void displaying()
+	{
+		cout << "ID：" << ID << "   name:" << name << endl;
+		cout << "courses:" << course << "   studying hours:" << shour << endl;
+	}
+};
+class TeacherAssistant : public Student,public Teacher
+{
+public:
+	TeacherAssistant(int i=180405105, string n="李易涵", string c="辅助狗狗自我训练课", int s=3)
+	{
+		Student::ID = i;
+		Student::name = n;
+		course = c;
+		shour = s;
+	}
+	void displaying()
+	{
+		cout << "ID：" <<Student::ID << "   name:" << Student::name << endl;
+		cout << "courses:" << course << "   studying hours:" << shour << endl;
+	}
+	int salary(int);
+};
+int TeacherAssistant::salary(int x)
+{
+	int sum;
+	sum = 35 *x;
+	return sum;
+}
+int main()
+{
+	cout << "教师信息：" << endl;
+	Teacher T;
+	T.displaying();
+	cout << "salary：";
+	T.salary(200);
+	cout << T.salary(200)<<endl;
+	cout << "学生信息：" << endl;
+	Student S;
+	S.displaying();
+	cout << "助教信息：" << endl;
+	TeacherAssistant TA;
+	TA.displaying();
+	TA.salary(30);
+	cout << "salary："<<TA.salary(30);
+}
