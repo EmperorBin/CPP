@@ -1,0 +1,1449 @@
+#include <iostream>
+#include <cstring>
+#include <cstdlib>//函数库
+#include <sstream>//字符串流
+#include <fstream>
+#include<cstdio>
+#include<ctime>
+#include <conio.h>//控制台
+#define account0  7116620100000254000    //第一个开户的卡号
+#define random(a,b) (rand()%(b-a+1)+a)//返回随机值，产生随机数
+using namespace std;
+int number = 0;
+class ATM;//ATM机
+class depositcard;//储蓄卡 
+class creditcard;//信用卡 
+ class account//人员操作类
+{
+public:
+	account()
+	{
+		id = "0", name = "0", sex = "0", address = "0", tele = "0", shenfen = "0", password = "0", money = 0;   //默认构造函数
+	}
+	account(string i, string n, string se, string a, string t, string s, string p, double m)        //带参数构造函数
+	{
+		id = i, name = n, sex = se, address = a, tele = t, shenfen = s, password = p, money = m;
+	}
+	string getid()
+	{
+		return id;
+	}
+	void display();      //用户信息界面
+	void querymoney();      //余额查询
+protected:
+	string id, name, address, tele, shenfen, password, sex;
+	double money;
+};
+//ATM机 
+class ATM
+{
+public:
+	void all_money();		//ATM机内的金额 
+	void setdeposit();      //储存卡开户
+	void setcredit();      //信用卡开户
+	void enterdeposit();   //储存卡登录
+	void entercredit();   //信用卡登录
+	void delaccount();      //销户
+	void exitatm();           //退出
+	void dsave();           //储蓄卡类导入磁盘文件
+	void csave();           //信用卡类导入磁盘文件
+	void dread();      //储蓄卡信息从磁盘文件导出
+	void cread();    //信用卡信息从磁盘文件导出
+	string inputpassword();        //设置账户的密码
+	ATM()//初始化ATM内的钱 
+	{
+		all = 10000;
+	};
+	bool checkshen(string str);    //检查身份证是否合格
+	void menu();           //功能菜单
+	int all;
+protected:
+	depositcard* deposit[50];    //定义多个储存卡对象
+	creditcard* credit[50];     //定义多个信用卡对象
+	static int depositcount, creditcount;
+
+};
+ATM qian;
+//账户派生类：储蓄卡
+class depositcard :public account, public ATM
+{
+public:
+	friend class ATM;
+	depositcard(string i, string n, string se, string a, string t, string s, string p, double m) :account(i, n, se, a, t, s, p, m) {}
+	void save();          //存钱功能
+	void fetch();        //取钱功能
+	void zhuanzhang();//转账功能
+	void jiaofei();//生活缴费
+	void shiyong();//使用记录查询
+	void lixi();       //修改功能 
+	string getp()
+	{
+		return password;
+	}
+};
+//账户派生类：信用卡
+class creditcard :public account, public ATM
+{
+public:
+	friend class ATM;
+	creditcard(string i, string n, string se, string a, string t, string s, string p, double m, double tou, double tm) :
+		account(i, n, se, a, t, s, p, m), touzhi(tou), tmax(tm) {}
+	void save();          //存钱功能
+	void fetch();        //取钱功能
+	void zhuanzhang();//转账功能
+	void jiaofei();//生活缴费
+	void shiyong();//使用记录查询
+	void lixi();       //修改信息 
+	void toumoney();    //每月要透支的钱
+	void show();
+	string getp()
+	{
+		return password;
+	}
+	string getid()
+	{
+		return id;
+	}
+	double gettouzhi();
+	double gettmax();
+	void add(double x);
+private:
+	int touzhi;   //透支额度
+	double tmax;
+};
+//信用卡透支 
+void creditcard::show()
+{
+	cout << "透支余额：" << touzhi << endl;
+	cout << "请按任意键继续！" << endl;
+}
+int ATM::depositcount = 0;
+int ATM::creditcount = 0;
+//储蓄卡类导入磁盘文件
+void ATM::dsave()
+{
+	ofstream infile("deposit.txt", ios::out);//以输出方式打开文件
+	ofstream outfile("deposit.txt", ios::out);//以输出方式打开文件,接收从内存输出的数据
+	int n = 0;
+	outfile << depositcount << "  ";
+	for (n = 0; n < depositcount; n++)
+	{
+		outfile << deposit[n]->id << "  ";//把信息写入磁盘文件bankdat.dat
+		outfile << deposit[n]->money << "  ";
+		outfile << deposit[n]->name << "  ";
+		outfile << deposit[n]->password << "  ";
+		outfile << deposit[n]->shenfen << "  ";
+		outfile << deposit[n]->tele << "  ";
+		outfile << deposit[n]->address << "  ";
+		outfile << deposit[n]->sex << "  ";
+	}
+	outfile.close();
+}
+//读取储蓄卡 
+void ATM::dread()
+{
+	int n;
+	string id, sex;
+	string nam, passw, tele;
+	double money;
+	string shenfen;
+	string address;
+	ifstream infile("deposit.txt", ios::in);       //以输入方式打开文件
+	infile >> depositcount;
+	if (!infile)
+	{
+		cerr << "Error reading, no data!" << endl;
+		return;
+	}
+	for (n = 0; n < depositcount; n++) //全部读入
+	{
+		infile >> id;
+		infile >> money;
+		infile >> nam;
+		infile >> passw;
+		infile >> shenfen;
+		infile >> tele;
+		infile >> address;
+		infile >> sex;
+		depositcard* acc = new depositcard(id, nam, sex, address, tele, shenfen, passw, money); //每读入一个n开辟一段内存
+		deposit[n] = acc; //赋值首地址
+	}
+	infile.close();
+	cout << "Normal reading !" << endl;
+}
+//信用卡类导入磁盘文件
+void ATM::csave()
+{
+	ofstream infile("credit.txt", ios::out);//以输出方式打开文件
+	ofstream outfile("credit.txt", ios::out);//以输出方式打开文件 bankdat.dat接收从内存输出的数据
+	int n = 0;
+	outfile << creditcount << "  ";
+	for (n = 0; n < creditcount; n++)
+	{
+		outfile << credit[n]->id << "  ";//把信息写入磁盘文件bankdat.dat
+		outfile << credit[n]->money << "  ";
+		outfile << credit[n]->name << "  ";
+		outfile << credit[n]->password << "  ";
+		outfile << credit[n]->shenfen << "  ";
+		outfile << credit[n]->tele << "  ";
+		outfile << credit[n]->address << "  ";
+		outfile << credit[n]->sex << "  ";
+		outfile << credit[n]->touzhi << "  ";
+		outfile << credit[n]->tmax << "  ";
+	}
+	outfile.close();
+}
+//信用卡类文件导入 
+void ATM::cread()
+{
+	int n;
+	string id, sex;
+	string nam, passw, tele;
+	double money, touzhi, tmax;
+	string shenfen;
+	string address;
+	ifstream infile("credit.txt", ios::in);       //以输入方式打开文件
+	infile >> depositcount;
+	if (!infile)
+	{
+		cerr << "Error reading, no data!" << endl;
+		return;
+	}
+	for (n = 0; n < depositcount; n++) //全部读入
+	{
+		infile >> id;
+		infile >> money;
+		infile >> nam;
+		infile >> passw;
+		infile >> shenfen;
+		infile >> tele;
+		infile >> address;
+		infile >> sex;
+		infile >> touzhi;
+		infile >> tmax;
+		creditcard* acc = new creditcard(id, nam, sex, address, tele, shenfen, passw, money, touzhi, tmax); //每读入一个n开辟一段内存
+		credit[n] = acc; //赋值首地址
+	}
+	infile.close();
+	cout << "Normal reading !" << endl;
+}
+//输入密码 
+string ATM::inputpassword()
+{
+	string s;
+	char ch;
+	while ((ch = _getch()) != '\r')
+	{
+		s += ch;
+		cout << "*";
+	}
+	return s;
+}
+//用户信息界面
+void account::display()
+{
+	cin.get();
+	system("cls");
+	cout << "**************************************************************" << endl;
+	cout << "*                                                            " << endl;
+	cout << "*                    姓名：" << name << "                        " << endl;
+	cout << "*                    性别：" << sex << "                        " << endl;
+	cout << "*                    地址：" << address << "                        " << endl;
+	cout << "*                    手机：" << tele << "                        " << endl;
+	cout << "*                    卡号：" << id << "                          " << endl;
+	cout << "*                    余额: " << money << "                       " << endl;
+	cout << "*                    按输入键回到上一菜单                    " << endl;
+	cout << "*                                                            " << endl;
+	cout << "**************************************************************" << endl;
+}
+//检查身份证号码 
+bool ATM::checkshen(string str)
+{
+	int len = str.length();
+	if (len != 18)
+	{
+		return false;
+	}
+	else
+	{
+		int i;
+		for (i = 0; i < 18; i++)
+		{
+			if (str[i] < '0' || str[i] > '9')
+			{
+				if (i == 17 && str[i] != 'x' && str[i] != 'X')
+				{
+					return false;
+				}
+				else if (i != 17)
+				{
+					return false;
+				}
+				else
+					return false;
+			}
+		}
+	}
+	return true;
+}
+// 退出ATM 
+void ATM::exitatm()
+{
+	cout << "感谢您使用ATM存取一体机，欢迎再来！" << endl;
+	exit(0);
+}
+//功能菜单函数
+void ATM::menu()
+{
+
+	int u;
+	cout << endl << endl << endl << endl << endl;
+	cout << "                                         *******************************" << endl;
+	cout << "                                         *                             *" << endl;
+	cout << "                                         *    欢迎使用ATM存取一体机!   *" << endl;
+	cout << "                                         *                             *" << endl;
+	cout << "                                         *******************************" << endl << endl;
+	cout << "                                                    按任意键继续!" << endl;
+	_getch();
+	do
+	{
+		system("cls");
+		cout << endl << endl << endl << endl << "                        请选择操作序号！(0~6)" << endl;
+		cout << "                           **********************************************************" << endl;
+		cout << "                           *                                                        *" << endl;
+		cout << "                           *                    0.ATM机金额存取                     *" << endl;
+		cout << "                           *                    1.储蓄卡账户创建                    *" << endl;
+		cout << "                           *                    2.储蓄卡账户登录                    *" << endl;
+		cout << "                           *                    3.信用卡账户创建                    *" << endl;
+		cout << "                           *                    4.信用卡账户登录                    *" << endl;
+		cout << "                           *                    5.账户注销                          *" << endl;
+		cout << "                           *                    6.退出                              *" << endl;
+		cout << "                           *                                                        *" << endl;
+		cout << "                           **********************************************************" << endl;
+		cin >> u;
+		while (u < 0 || u>7)
+		{
+			cout << "请合法输入!" << endl;
+			cin >> u;
+		}
+		system("cls");
+		switch (u)
+		{
+		case 0:
+			all_money(); //存款机内的钱 
+			break;
+		case 1:
+			setdeposit();
+			//创建储蓄卡账户
+			break;
+		case 2:
+			enterdeposit();
+			break;       //储蓄卡登录
+		case 3:
+			setcredit();
+			break;       //创建信用卡账户
+		case 4:
+			entercredit();
+			break;       //信用卡登录
+		case 5:
+			delaccount();
+			break;        //账户注销*/
+		case 6:
+			exitatm();
+			break;           //退出
+		}
+	} while (1);
+	system("cls");
+}
+//ATM内的金额
+void ATM::all_money()
+{
+	string  mi = "123456", p;
+	int y = 2;
+	cout << "请输入密码(密码为6位):" << endl;
+	p = inputpassword();
+	while (1)
+	{
+		if (y == 0)
+		{
+			break;
+		}
+		if (p != mi)
+		{
+			cout << endl << "密码错误,请重新输入！(" << y << "次机会)" << endl;
+			p = inputpassword();
+			y--;
+		}
+		else
+			break;
+	}
+	if (y == 0)
+	{
+		cout << endl;
+		system("pause");
+		system("cls");
+		return;
+	}
+	system("cls");
+	cout << "1.加钱" << endl;
+	cout << "2.取钱" << endl;
+	cout << "3.返回上一菜单" << endl;
+	char c;
+	int n;
+	cin >> c;
+	switch (c)
+	{
+	case '1':
+		cout << "请输入要添加钱" << endl;
+		cin >> n;
+		qian.all += n;
+		break;
+	case '2':
+		cout << "请输入要取的钱" << endl;
+		cin >> n;
+		if (n > qian.all)
+		{
+			cout << "余额不足！" << endl;
+		}
+		else
+		{
+			qian.all -= n;
+		}
+		break;
+	case '3':
+		break;
+	default:
+		cout << "输入有误！" << endl;
+		break;
+	}
+	cout << endl;
+	cout << "现ATM的钱：" << qian.all << endl;
+	system("pause");
+	system("cls");
+}
+//创建储蓄卡账户
+void ATM::setdeposit()
+{
+	srand((unsigned)time(NULL));
+	string i, n, a, t, s, se, p;
+	double m;
+	int find = 1;
+	cin.get();
+	cout << "请输入姓名：" << endl;
+	getline(cin, n);
+	cout << "请输入性别：(男或女)" << endl;
+	cin >> se;
+	cin.get();
+	cout << "请输入地址：" << endl;
+	getline(cin, a);
+	cout << "请输入手机号：(11位)" << endl;
+	cin >> t;
+	while (1)
+	{
+		cout << "请输入身份证号：" << endl;
+		cin >> s;
+		if (!checkshen(s))
+		{
+			cout << "不合法输入!" << endl;
+			continue;
+		}
+		else
+			break;
+	}
+	while (1)
+	{
+		int x = 2;
+		cout << "请输入6位纯数字密码：" << endl;
+		p = inputpassword();
+		cout << endl;
+		string p1;
+		cout << "请再输入您设置的密码!" << endl;
+		p1 = inputpassword();
+		cout << endl;
+		while (p != p1 && x != 0)
+		{
+			cout << "输入错误，请重新输入！(" << x << "次机会)" << endl;
+			p1 = inputpassword();
+			x--;
+			cout << endl;
+		}
+		if (p1 == p)
+			break;
+		if (x == 0)
+		{
+			find = 0;
+			break;
+		}
+	}
+	if (find == 0)
+		return;
+	cout << "请输入存入金额：" << endl;
+	cin >> m;
+	while (m <= 0)
+	{
+		cout << "请合法输入金额：" << endl;
+		cin >> m;
+	}
+	cin.get();
+	unsigned int acc = account0 + random(1, 100) + number;
+	number++;
+	cout << "开户成功！" << endl << endl;
+	cout << "您的银行卡号为:" << acc << "   请牢记! 卡号将用于您的账户登陆!" << endl;
+	stringstream str;
+	str << acc;
+	str >> i;
+	deposit[depositcount] = new depositcard(i, n, se, a, t, s, p, m);                     //把新建账户对象地址传过去
+	++depositcount;
+	dsave();
+	cout << "请按任意键继续!" << endl;
+	cin.get();
+	return;
+}
+//创建信用卡账户
+void ATM::setcredit()
+{
+	srand((unsigned)time(NULL));
+	string i, n, a, t, s, se, p;
+	double m;
+	double tou, tmax;
+	int find = 1;
+	cin.get();
+	cout << "请输入姓名：" << endl;
+	getline(cin, n);
+	cout << "请输入性别：(男或女)" << endl;
+	cin >> se;
+	cin.get();
+	cout << "请输入地址：" << endl;
+	getline(cin, a);
+	cout << "请输入手机号：(11位)" << endl;
+	cin >> t;
+	while (1)
+	{
+		cout << "请输入身份证号：" << endl;
+		cin >> s;
+		if (!checkshen(s))
+		{
+			cout << "不合法输入!" << endl;
+			continue;
+		}
+		else
+			break;
+	}
+	while (1)
+	{
+		int x = 2;
+		cout << "请输入6位纯数字密码：" << endl;
+		p = inputpassword();
+		cout << endl;
+		string p1;
+		cout << "请再输入您设置的密码!" << endl;
+		p1 = inputpassword();
+		cout << endl;
+		while (p != p1)
+		{
+			cout << "输入错误，请重新输入！(" << x << "次机会)" << endl;
+			p1 = inputpassword();
+			x--;
+			cout << endl;
+		}
+		if (p1 == p)
+			break;
+		if (x == 0)
+		{
+			find = 0;
+			break;
+		}
+	}
+	if (find == 0)
+		return;
+	cout << "请输入存入金额：" << endl;
+	cin >> m;
+	while (m <= 0)
+	{
+		cout << "请合法输入金额：" << endl;
+		cin >> m;
+	}
+	cout << "请输入透支金额！(大于2000，小于10000)" << endl;
+	cin >> tou;
+	while (tou <= 2000 || tou > 10000)
+	{
+		cout << "请合法输入！" << endl;
+		cin >> tou;
+	}
+	tmax = tou;
+	cin.get();
+	unsigned int acc = account0 + random(1, 100) + number;
+	number++;
+	cout << "开户成功！" << endl << endl;
+	cout << "您的银行卡号为:" << acc << "   请牢记! 卡号将用于您的账户登陆!" << endl;
+	stringstream str;
+	str << acc;
+	str >> i;
+	//creditcard * pt=new creditcard(i,n,se,a,t,s,p,m,tou,tmax);   //动态建立一个账户对象
+	credit[creditcount] = new creditcard(i, n, se, a, t, s, p, m, tou, tmax);   //动态建立一个账户对象;                      //把新建账户对象地址传过去
+	creditcount++;
+	csave();
+	cout << "请按任意键继续!" << endl;
+	cin.get();
+}
+//储蓄卡登录
+void ATM::enterdeposit()
+{
+	dread();
+	string id, p;
+	int f1 = 1;
+	int flag = 1, j, i = 0; int x = 2, y = 2;
+	cout << "请输入卡号：" << endl;
+	cin >> id;
+	while (flag && x != 0)
+	{
+		for (int i = 0; i < depositcount; i++)
+		{
+
+			if (id == deposit[i]->getid())
+			{
+				flag = 0;
+				j = i;
+				break;
+			}
+		}
+		if (flag == 1)
+		{
+			cout << "账号不存在,请重新输入！(" << x << "次机会)" << endl;
+			cin >> id;
+			x--;
+		}
+		if (x == 0)
+			cout << "返回上一界面！" << endl;
+	}
+	if (x == 0)
+	{
+		return;
+	}
+	while (1)
+	{
+		cout << "请输入密码:" << endl;
+		p = inputpassword();
+		if (p != deposit[j]->getp())
+		{
+			cout << endl << "密码错误,请重新输入！(" << y << "次机会)" << endl;
+			p = inputpassword();
+			y--;
+		}
+		else
+			break;
+		if (y == 0)
+		{
+			f1 = 0;
+			cout << "返回上一界面！" << endl;
+			break;
+		}
+	}
+	if (f1 == 0)
+		return;
+	int n;
+	do
+	{
+		system("cls");
+		cout << "请选择操作序号！" << endl;
+		cout << "**********************************************************" << endl;
+		cout << "*                                                        *" << endl;
+		cout << "*                    1.用户信息                          *" << endl;
+		cout << "*                    2.存款                              *" << endl;
+		cout << "*                    3.取款                              *" << endl;
+		cout << "*                    4.余额查询                          *" << endl;
+		cout << "*                    5.修改信息                          *" << endl;
+		cout << "*                    6.转账                              *" << endl;
+		cout << "*                    7.生活缴费                          *" << endl;
+		cout << "*                    8.使用记录                          *" << endl;
+		cout << "*                    9.返回上一界面                      *" << endl;
+		cout << "*                                                        *" << endl;
+		cout << "**********************************************************" << endl;
+		cin >> n;
+		while (n < 1 || n>9)
+		{
+			cout << "请合法输入!" << endl;
+			cin >> n;
+		}
+		switch (n)
+		{
+		case 1:
+			deposit[j]->display();    //用户信息界面
+			break;
+		case 2:
+			deposit[j]->save();
+			dsave();
+			break;    //储蓄卡存钱
+		case 3:
+			deposit[j]->fetch();
+			dsave();
+			break;    //储蓄卡取钱
+		case 4:
+			deposit[j]->querymoney();
+			dsave();
+			break;   //储蓄卡余额查询
+		case 5:
+			deposit[j]->lixi();     //修改 
+			dsave();
+			break;
+		case 6:
+			deposit[j]->zhuanzhang();//储蓄卡转账
+			dsave();
+			break;
+		case 7:
+			deposit[j]->jiaofei();//储蓄卡生活缴费
+			dsave();
+			break;
+		case 8:
+			deposit[j]->shiyong();//储蓄卡使用记录
+			dsave();
+			break;
+		case 9:
+			return;
+		}
+		cin.get();
+	} while (1);
+}
+//信用卡登录
+void ATM::entercredit()
+{
+	cread();
+	string id, p;
+	int f1 = 1;
+	int flag = 1, j, i = 0; int x = 2, y = 2;
+	cout << "请输入卡号：" << endl;
+	cin >> id;
+	while (flag)
+	{
+		for (i = 0; i <= creditcount; i++)
+		{
+
+			if (id == credit[i]->getid())
+			{
+				flag = 0;
+				j = i;
+				break;
+			}
+		}
+		if (flag == 1)
+		{
+			cout << "账号不存在,请重新输入！" << endl;
+			cin >> id;
+		}
+	}
+	while (1)
+	{
+		cout << "请输入密码:" << endl;
+		p = inputpassword();
+		if (p != credit[j]->getp())
+		{
+			cout << endl << "密码错误,请重新输入！(" << y - 2 << "次机会！" << endl;
+			p = inputpassword();
+			y--;
+		}
+		else
+			break;
+		if (y == 0)
+		{
+			f1 = 0;
+			break;
+		}
+	}
+	if (f1 == 0)
+		return;
+	int n;
+	do
+	{
+		system("cls");
+		cout << "请选择操作序号！" << endl;
+		cout << "**********************************************************" << endl;
+		cout << "*                                                        *" << endl;
+		cout << "*                    0.修改信息                          *" << endl;
+		cout << "*                    1.用户信息                          *" << endl;
+		cout << "*                    2.存款或还款                        *" << endl;
+		cout << "*                    3.取款                              *" << endl;
+		cout << "*                    4.余额查询                          *" << endl;
+		cout << "*                    5.转账                              *" << endl;
+		cout << "*                    6.生活缴费                          *" << endl;
+		cout << "*                    7.使用记录                          *" << endl;
+		cout << "*                    8.返回上一界面                      *" << endl;
+		cout << "*                                                        *" << endl;
+		cout << "**********************************************************" << endl;
+		cin >> n;
+		while (n < 0 || n>8)
+		{
+			cout << "请合法输入!" << endl;
+			cin >> n;
+		}
+		switch (n)
+		{
+		case 0:
+			credit[j]->lixi();
+			csave();
+			break;
+		case 1:
+			credit[j]->display();    //用户信息界面
+			credit[j]->show();
+			break;
+		case 2:
+			credit[j]->save();
+			csave();
+			break;    //信用卡存钱
+		case 3:
+			credit[j]->fetch();
+			csave();
+			break;    //信用卡取钱
+		case 4:
+			credit[j]->querymoney();
+			credit[j]->show();
+			csave();
+			break;   //信用卡余额查询
+		case 5:
+			credit[j]->zhuanzhang();//转账
+			csave();
+			break;
+		case 6:
+			credit[j]->jiaofei();//生活缴费
+			csave();
+			break;
+		case 7:
+			credit[j]->shiyong();//使用记录
+			csave();
+			break;
+		case 8:
+			return;
+		}
+		cin.get();
+	} while (1);
+}
+//信用卡存钱或还钱
+void creditcard::save()
+{
+	double a;
+	int find = 1;
+	if (touzhi < tmax)
+	{
+		find = 0;
+		cout << "输入存放金钱，但请先还款透支金额！" << endl;
+		cin >> a;
+		while (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		qian.all += a;
+		if (a < tmax - touzhi)
+		{
+			touzhi += a;
+			cout << "您当前只还款一部分！" << endl;
+		}
+		else if (a >= tmax - touzhi)
+		{
+			a -= (tmax - touzhi);
+			cout << "您已经完成还款！" << endl;
+			money += a;
+			cout << "当前余额为：" << money << endl;
+			cout << "透支余额为：" << tmax << endl;
+		}
+	}
+	if (touzhi == tmax && find == 1)
+	{
+		cout << "输入存放金钱！" << endl;
+		cin >> a;
+		while (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		money += a;
+		cout << "当前余额为：" << money << endl;
+	}
+	cout << "请按任意键继续！" << endl;
+	cin.get();
+}
+//信用卡取钱
+void creditcard::fetch()
+{
+	double a, b;
+	b = money + touzhi;
+	system("cls");
+	cout << "当前余额：" << money << endl;
+	cout << "透支余额：" << touzhi << endl;
+	cout << "输入取款金额！" << endl;
+	cin >> a;
+	while (a<0 || a>b)
+	{
+		if (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		else
+		{
+			cout << "取款金额不足,请重新输入！" << endl;
+			cin >> a;
+		}
+	}
+	if (a <= money)
+	{
+		money -= a;
+		if (qian.all - a > 0)
+		{
+			qian.all -= a;
+			cout << "取款成功，请按任意键继续！" << endl;
+		}
+		else
+		{
+			cout << "ATM机内余额不足!" << endl;
+		}
+	}
+	else
+	{
+		touzhi -= (a - money);
+		money = 0;
+		if (qian.all - a > 0)
+		{
+			qian.all -= a;
+			cout << "取款成功，请按任意键继续！" << endl;
+		}
+		else
+		{
+			cout << "ATM机内余额不足!" << endl;
+		}
+
+	}
+	cin.get();
+}
+void creditcard::zhuanzhang()
+{
+	int s;
+	double a, b;
+	b = money + touzhi;
+	system("cls");
+	cout << "请输入转账账号：" << endl;
+	cin >> s;
+	cout << "当前余额：" << money << endl;
+	cout << "透支余额：" << touzhi << endl;
+	cout << "输入转账金额！" << endl;
+	cin >> a;
+	while (a<0 || a>b)
+	{
+		if (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		else
+		{
+			cout << "转账金额不足,请重新输入！" << endl;
+			cin >> a;
+		}
+	}
+	if (a <= money)
+	{
+		money -= a;
+		if (qian.all - a > 0)
+		{
+			qian.all -= a;
+			cout << "转账成功，请按任意键继续！" << endl;
+		}
+		else
+		{
+			cout << "ATM机内余额不足!" << endl;
+		}
+	}
+	else
+	{
+		touzhi -= (a - money);
+		money = 0;
+		if (qian.all - a > 0)
+		{
+			qian.all -= a;
+			cout << "转账成功，请按任意键继续！" << endl;
+		}
+		else
+		{
+			cout << "ATM机内余额不足!" << endl;
+		}
+
+	}
+	cin.get();
+}
+void creditcard::jiaofei()
+{
+	double a, b;
+	b = money + touzhi;
+	system("cls");
+	cout << "当前余额：" << money << endl;
+	cout << "透支余额：" << touzhi << endl;
+	cout << "输入缴费金额！" << endl;
+	cin >> a;
+	while (a<0 || a>b)
+	{
+		if (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		else
+		{
+			cout << "缴费金额不足,请重新输入！" << endl;
+			cin >> a;
+		}
+	}
+	if (a <= money)
+	{
+		money -= a;
+		if (qian.all - a > 0)
+		{
+			qian.all -= a;
+			cout << "缴费成功，请按任意键继续！" << endl;
+		}
+		else
+		{
+			cout << "ATM机内余额不足!" << endl;
+		}
+	}
+	else
+	{
+		touzhi -= (a - money);
+		money = 0;
+		if (qian.all - a > 0)
+		{
+			qian.all -= a;
+			cout << "缴费成功，请按任意键继续！" << endl;
+		}
+		else
+		{
+			cout << "ATM机内余额不足!" << endl;
+		}
+
+	}
+	cin.get();
+}
+void depositcard::shiyong()
+{
+	dread();
+	cin.get();
+}
+void creditcard::shiyong()
+{
+	cread();
+	cin.get();
+}
+//储蓄卡存钱
+void depositcard::save()
+{
+	cin.get();
+	system("cls");
+	double a;
+	cout << "请输入存款金额！" << endl;
+	cin >> a;
+	while (a <= 0)
+	{
+		cout << "请合法输入！" << endl;
+		cin >> a;
+	}
+	cout << "存款成功！" << endl;
+	money += a;
+	qian.all += a;
+	cout << "请按任意键继续！" << endl;
+	cin.get();
+}
+//账户余额 
+void account::querymoney()
+{
+	system("cls");
+	cout << "您账户当前余额为：" << money << endl;
+	cin.get();
+}
+//储蓄卡取钱
+void depositcard::fetch()
+{
+	system("cls");
+	double a;
+	int b;
+	do
+	{
+		cout << "请输入取款金额！" << endl;
+		cin >> a;
+		while (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		if (money < a)
+		{
+			cout << "对不起，您的余额不足！" << endl;
+		}
+		else
+		{
+
+			if (qian.all - a >= 0)
+			{
+				money = money - a;
+				qian.all -= a;
+				cout << endl << "取款成功！" << endl;
+			}
+			else
+			{
+				cout << "ATM内钱不够！" << endl;
+			}
+		}
+		cout << "是否继续取款？是(0)/否(1) " << endl;
+		cin >> b;
+		while (b != 0 && b != 1)//选择错误时判定
+		{
+			cout << "请合法输入！" << endl;
+			cin >> b;
+		}
+	} while (b == 0);
+	cout << "请按任意键继续！" << endl;
+	cin.get();
+}
+void depositcard::zhuanzhang()
+{
+	system("cls");
+	double a;
+	int b,c;
+	do
+	{
+		cout << "请输入转账账号：" << endl;
+		cin >> c;
+		cout << "请输入转账金额！" << endl;
+		cin >> a;
+		while (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		if (money < a)
+		{
+			cout << "对不起，您的余额不足！" << endl;
+		}
+		else
+		{
+
+			if (qian.all - a >= 0)
+			{
+				money = money - a;
+				qian.all -= a;
+				cout << endl << "转账成功！" << endl;
+			}
+			else
+			{
+				cout << "ATM内钱不够！" << endl;
+			}
+		}
+		cout << "是否继续转账？是(0)/否(1) " << endl;
+		cin >> b;
+		while (b != 0 && b != 1)//选择错误时判定
+		{
+			cout << "请合法输入！" << endl;
+			cin >> b;
+		}
+	} while (b == 0);
+	cout << "请按任意键继续！" << endl;
+	cin.get();
+}
+void depositcard::jiaofei()
+{
+	system("cls");
+	double a;
+	int b;
+	do
+	{
+		cout << "请输入缴费金额！" << endl;
+		cin >> a;
+		while (a < 0)
+		{
+			cout << "请合法输入！" << endl;
+			cin >> a;
+		}
+		if (money < a)
+		{
+			cout << "对不起，您的余额不足！" << endl;
+		}
+		else
+		{
+
+			if (qian.all - a >= 0)
+			{
+				money = money - a;
+				qian.all -= a;
+				cout << endl << "缴费成功！" << endl;
+			}
+			else
+			{
+				cout << "ATM内钱不够！" << endl;
+			}
+		}
+		cout << "是否继续缴费？是(0)/否(1) " << endl;
+		cin >> b;
+		while (b != 0 && b != 1)//选择错误时判定
+		{
+			cout << "请合法输入！" << endl;
+			cin >> b;
+		}
+	} while (b == 0);
+	cout << "请按任意键继续！" << endl;
+	cin.get();
+}
+//信用卡号修改信息 
+void creditcard::lixi()
+{
+	system("cls");
+	string mi;
+	cout << "1.修改密码" << endl;
+	cout << "2.修改住址" << endl;
+	cout << "3.修改姓名" << endl;
+	cout << "4.修改性别" << endl;
+	cout << "5.修改手机号" << endl;
+	cout << "6.修改身份证号" << endl;
+	cout << "7.返回上级菜单" << endl;
+	string c;
+	cin >> c;
+	if (c == "7")
+	{
+		system("cls");
+		return;
+	}
+	else if (c == "1")
+	{
+		cout << "请输入新密码(六位)：" << endl;
+		cin >> mi;
+		password = mi;
+	}
+	else if (c == "2")
+	{
+		cout << "请输入地址：" << endl;
+		cin >> mi;
+		address = mi;
+	}
+	else if (c == "3")
+	{
+		cout << "请输入姓名：" << endl;
+		cin >> mi;
+		name = mi;
+	}
+	else if (c == "4")
+	{
+		cout << "请输入性别：" << endl;
+		cin >> mi;
+		sex = mi;
+	}
+	else if (c == "5")
+	{
+		cout << "请输入手机号：" << endl;
+		cin >> mi;
+		tele = mi;
+	}
+	else if (c == "6")
+	{
+		cout << "请输入身份证号：" << endl;
+		cin >> mi;
+		shenfen = mi;
+	}
+	else
+	{
+		cout << "输入有误！" << endl;
+	}
+	system("pause");
+	system("cls");
+}
+//储蓄卡账号修改信息 
+void depositcard::lixi()
+{
+	system("cls");
+	string mi;
+	cout << "1.修改密码" << endl;
+	cout << "2.修改住址" << endl;
+	cout << "3.修改姓名" << endl;
+	cout << "4.修改性别" << endl;
+	cout << "5.修改手机号" << endl;
+	cout << "6.修改身份证号" << endl;
+	cout << "7.返回上级菜单" << endl;
+	string c;
+	cin >> c;
+	if (c == "7")
+	{
+		system("cls");
+		return;
+	}
+	else if (c == "1")
+	{
+		cout << "请输入新密码(六位)：" << endl;
+		cin >> mi;
+		password = mi;
+	}
+	else if (c == "2")
+	{
+		cout << "请输入地址：" << endl;
+		cin >> mi;
+		address = mi;
+	}
+	else if (c == "3")
+	{
+		cout << "请输入姓名：" << endl;
+		cin >> mi;
+		name = mi;
+	}
+	else if (c == "4")
+	{
+		cout << "请输入性别：" << endl;
+		cin >> mi;
+		sex = mi;
+	}
+	else if (c == "5")
+	{
+		cout << "请输入手机号：" << endl;
+		cin >> mi;
+		tele = mi;
+	}
+	else if (c == "6")
+	{
+		cout << "请输入身份证号：" << endl;
+		cin >> mi;
+		shenfen = mi;
+	}
+	else
+	{
+		cout << "输入有误！" << endl;
+	}
+	system("pause");
+	system("cls");
+}
+//销户
+void ATM::delaccount()
+{
+	int n, i = 0, j, k, flag = 1;
+	string id, p;
+	cout << "储蓄卡销户(0)/信用卡销户(1)" << endl;
+	cin >> n;
+	while (n != 0 && n != 1)
+	{
+		cout << "请合法输入！" << endl;
+		cin >> n;
+	}
+	if (n == 0)
+	{
+		while (flag)
+		{
+			cout << "请输入你要销户的卡号：" << endl;
+			cin >> id;
+			for (i = 0; i < depositcount; i++)
+			{
+				if (id == deposit[i]->getid())
+				{
+					j = i;
+					flag = 0;
+					break;
+				}
+			}
+			if (flag == 1)
+			{
+				cout << "账号不存在,请重新输入！" << endl;
+				cin >> id;
+			}
+		}
+		while (1)
+		{
+			cout << "请输入密码:" << endl;
+			p = inputpassword();
+			if (p != deposit[j]->getp())
+			{
+				cout << "密码错误,请重新输入！" << endl;
+				p = inputpassword();
+			}
+			else
+				break;
+		}
+		delete deposit[j];
+		for (k = j; k < depositcount; k++) //所有被删号后的数据重新存储
+		{
+			deposit[k] = deposit[k + 1];
+		}
+		deposit[depositcount - 1] = NULL;
+		depositcount--; //账号总数自减一次
+		cout << "你的账户已经被注销!" << endl << endl;
+		dsave();
+		cin.get();
+	}
+	if (n == 1)
+	{
+		double a;
+		while (flag)
+		{
+			cout << "请输入你要销户的卡号：" << endl;
+			cin >> id;
+			for (i = 0; i < creditcount; i++)
+			{
+				if (id == credit[i]->getid())
+				{
+					j = i;
+					flag = 0;
+					break;
+				}
+			}
+			if (flag == 1)
+			{
+				cout << "账号不存在,请重新输入！" << endl;
+				cin >> id;
+			}
+		}
+		while (1)
+		{
+			cout << "请输入密码:" << endl;
+			p = inputpassword();
+			if (p != credit[j]->getp())
+			{
+				cout << "密码错误,请重新输入！" << endl;
+				p = inputpassword();
+			}
+			else
+				break;
+		}
+		while (credit[j]->gettouzhi() < credit[j]->gettmax())
+		{
+			cout << "请先还款,您所欠透支金额为：" << credit[j]->gettmax() - credit[j]->gettouzhi() << endl;
+			cin >> a;
+			credit[j]->add(a);
+		}
+		delete credit[j];
+		for (int j = i; j < creditcount; j++) //所有被删号后的数据重新存储
+		{
+			credit[j] = credit[j + 1];
+		}
+		credit[creditcount - 1] = NULL;
+		creditcount--; //账号总数自减一次
+		cout << "你的账户已经被注销!" << endl << endl;
+		csave();
+		cin.get();
+	}
+	cout << endl << "请按任意键继续！" << endl;
+	cin.get();
+}
+
+double creditcard::gettouzhi()
+{
+	return touzhi;
+}
+
+double creditcard::gettmax()
+{
+	return tmax;
+}
+
+void creditcard::add(double x)
+{
+	touzhi += x;
+}
+int main()
+{
+	ATM atm;
+	atm.menu();
+	return 0;
+}
+
+
+
