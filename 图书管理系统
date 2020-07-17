@@ -1,0 +1,549 @@
+#include<iostream>
+#include <cstdio> 
+#include <cstring>
+#include <cstdlib>
+#include <conio.h>
+using namespace std;
+#define Max 3    
+typedef struct book
+{
+char book_num[10];
+char book_name[20];
+char book_writer[10];
+int book_kc;
+int book_xy;
+struct book *next;
+}BK;
+typedef struct borrow
+{
+char borrow_book_num[10];
+char huanshu_date[8];
+}BW;
+typedef struct reader
+{
+char reader_num[10];
+char reader_name[10];
+int zuida;
+BW borrow[Max];
+struct reader *next;
+}RD;
+BK *h_book;
+RD *h_reader;
+int Menu();           /*主菜单*/
+void Menu_select();        
+void Init();               /*初始化*/
+void Init_reader();       
+void Init_book();         
+void Insert_New_Book();    /*新书入库*/
+int  Find();                /*查找菜单*/
+void Find_Select();       /*查找菜单选择函数*/
+void Find_Reader();      
+void Find_Book();         
+void Print_reader();      /*显示读者信息*/
+void Print_book();       
+void Borrow_Book();        
+void Return_Book();       
+void Save();               /*保存信息*/
+void Save_Reader();       
+void Save_Book();        
+void Load();            
+void Load_Reader();       /*加载读者信息*/
+void Load_Book();         
+int Menu() /*主菜单*/
+{ int i;
+cout << endl;
+cout << endl;
+cout << endl;
+cout << endl;
+cout<<"                                   图书管理系统主菜单"<<endl;
+cout<<"                      ================================================="<<endl;
+cout<<"                                 ☆    0----退出系统     ☆"<<endl;
+cout<<"                                 ☆    1----新书入库     ☆"<<endl;
+cout<<"                                 ☆    2----查询信息     ☆"<<endl;
+cout<<"                                 ☆    3----借书登记     ☆"<<endl;
+cout<<"                                 ☆    4----还书管理     ☆"<<endl;
+cout<<"                      ================================================="<<endl;
+cout<<"                                      请选择:"<<endl; 
+for(;;) 
+{
+    cin >> i ;  
+   if(i<0||i>4)
+   cout<<"错误!请重新输入:"<<endl;
+   else break;
+}
+return i; 
+}
+void Menu_select()/*主菜单选择函数*/
+{
+for(;;) /*循环调用模式,保证能进行重复操作*/
+{
+switch(Menu()) /*功能选择*/
+{ case 0:
+     system("cls");
+     Save();
+cout<<"文件已经成功保存!"<<endl; 
+cout<<"欢迎您下次使用本系统!"<<endl; 
+   _getch(); 
+exit(0);
+   case 1:Insert_New_Book();break; 
+   case 2:Find_Select();break;
+   case 3:Borrow_Book();break;
+   case 4:Return_Book();break;
+   default:cout<<"错误!"<<endl;exit(0);
+   }
+}
+}
+void Init() /*初始化*/
+{ 
+   Init_reader();
+   Init_book();
+}
+void Init_reader() /*初始化读者信息*/
+{ 
+    RD *p0;
+    int i;
+    cout<<"*读者初始化开始*"<<endl;
+    p0=(RD*)malloc(sizeof(RD));
+    h_reader=p0;
+    cout<<"读者图书证号:"<<endl;
+    cin >> p0->reader_num ;
+    cout<<"读者姓名:"<<endl; 
+    cin >> p0->reader_name;
+    p0->zuida=0;
+    for(i=0;i<Max;i++)
+    {
+strcpy_s(p0->borrow[i].borrow_book_num,"0"); /*所借图书直接置为0(即没有借书)*/
+     strcpy_s(p0->borrow[i].huanshu_date,"0"); 
+     }
+      p0->next=NULL;
+     cout<<"*读者信息初始化完毕!按任意键继续下一步操作*"<<endl; 
+   _getch();
+      system("cls");
+}
+void Init_book() /*初始化图书信息*/
+{
+BK *p0;
+cout<<"*图书初始化开始*"<<endl;
+p0=(BK*)malloc(sizeof(BK));
+h_book=p0;
+   cout<<"图书编号:"<<endl;
+   cin >> p0->book_num;
+   cout<<"图书名称:"<<endl;
+   cin >> p0->book_name;
+   cout<<"图书作者:"<<endl;
+   cin >> p0->book_writer;
+   cout<<"图书数量:"<<endl;
+   cin >> p0->book_kc;
+     p0->book_xy=p0->book_kc;     /*开始时图书现有量和库存量相等*/
+    p0->next=NULL;
+   cout<<"*图书信息初始化完毕!按任意键继续下一步操作*"<<endl;
+   _getch();
+      system("cls");
+}
+void Insert_New_Book()/*新书入库*/
+{
+BK *p,*p1,*p2; 
+p=p2=h_book;
+cout<<"*新书入库模块*"<<endl;
+cout << "*请输入新书信息*" << endl;
+p1=(BK *)malloc(sizeof(BK));
+   cout<<"图书编号:"<<endl;
+   cin >> p1->book_num;
+    while(strcmp(p1->book_num,p2->book_num)!=0&&p2->next!=NULL)
+     p2=p2->next;
+    if(strcmp(p1->book_num,p2->book_num)==0) /*此处分两种情况,若图书编号存在,则直接入库,只须输入图书的数量*/
+    {
+     cout<<"此编号图书已存在!!直接入库!"<<endl; 
+           cout<<"图书数量:"<<endl;
+           cin >> p1->book_kc;
+     p2->book_kc+=p1->book_kc;
+    p2->book_xy+=p1->book_kc;        /*开始时图书现有量和库存量相等*/
+    }
+    else                           /*若图书编号不存在,则需要输入图书的所有信息 ,然后再进行插入操作*/
+    {
+cout<<"图书名称:"<<endl;
+cin >> p1->book_name;
+cout<<"图书作者:"<<endl;
+cin >> p1->book_writer;
+     cout<<"图书数量:"<<endl;
+     cin >> p1->book_kc;
+while(p->next) 
+    {
+      p=p->next;
+    }
+     if(h_book==NULL) h_book=p1;    /*此处分两种情况,链表中没有数据,head头指针直接指向p1处*/  
+     else p->next=p1;    /*链表中有数据,链表中最后元素的next指向p1处*/            
+      
+p1->next=NULL;
+    p1->book_xy=p1->book_kc; 
+   }
+    cout<<"*新书入库完毕!按任意键继续下一步操作*"<<endl;
+   _getch();
+      system("cls");
+}
+int Find()          /*查找功能菜单*/
+{
+int i;
+cout << endl;
+cout << endl;
+cout << endl;
+cout << endl;
+cout<<"                                             信息查询菜单"<<endl;
+cout<<"                            ================================================="<<endl;
+cout<<"                                       ☆    0----返回上级     ☆            "<<endl;
+cout<<"                                       ☆    1----查找图书     ☆            "<<endl;
+cout<<"                                       ☆    2----查找读者     ☆            "<<endl;
+cout<<"                                       ☆    3----显示图书     ☆            "<<endl;
+cout<<"                                       ☆    4----显示读者     ☆            "<<endl;
+cout<<"                            ================================================="<<endl;
+cout<<"                                            请选择:"<<endl;
+for(;;)   
+{ 
+   cin>>i;  
+   if(i<0||i>4)
+    cout<<"错误!请重新输入:"<<endl;
+   else break;
+}
+   return i; 
+}
+void Find_Select() /*查找菜单选择函数*/
+{
+system("cls");
+for(;;)          
+{
+   switch(Find())           /*判断读者做出了什么功能选择*/
+{ 
+   case 0:system("cls"); Menu_select(); break; 
+   case 1:Find_Book();break;
+   case 2:Find_Reader();break;
+   case 3:Print_book();break;
+   case 4:Print_reader();break;
+    default:cout<<"错误!"<<endl;exit(0);
+   }
+}
+}
+void Find_Reader() /*查找读者信息*/
+{
+RD *p;
+int i;
+char find_reader[10];
+p=h_reader;
+cout<<"*读者信息查询模块*"<<endl;
+cout<<"请输入你要查询读者图书证号:"<<endl;
+cin >> find_reader;
+while(strcmp(p->reader_num,find_reader)!=0&&p->next)
+   p=p->next;
+if(strcmp(p->reader_num,find_reader)==0)
+{
+    cout<<"读者编号的信息为:"<<find_reader<<endl;
+    cout<<"读者图书证号:" << p->reader_num <<endl;
+    cout<<"读者姓名:"<< p->reader_name <<endl;
+   for(i=0;i<Max;i++)
+{
+   cout<<endl;
+   cout<<"图书编号:"<< p->borrow[i].borrow_book_num <<endl;
+   cout<<"还书时间:"<< p->borrow[i].huanshu_date <<endl;
+}
+   cout<<endl;
+}
+else
+   cout<<"*此读者编号不存在,请核对!按任意键返回*"<<endl;
+_getch(); 
+system("cls");
+}
+void Find_Book() /*查找图书信息*/
+{
+BK *p;
+char find_book[10]; 
+p=h_book;
+cout<<"*图书信息查询模块*"<<endl;
+cout<<"请输入你要查询图书编号:"<<endl;
+cin >> find_book;
+while(strcmp(p->book_num,find_book)!=0&&p->next)
+   p=p->next;
+if(strcmp(p->book_num,find_book)==0)   
+{
+   cout<<"图书编号"<<find_book<<"信息是："<<endl;
+   cout << "图书编号：" << p->book_num << endl;
+   cout << "图书名称:" << p->book_name << endl;
+   cout << "图书作者:" << p->book_writer << endl;
+   cout << "现有量:" << p->book_xy << endl;
+   cout<<"库存量:"<< p->book_kc <<endl;
+}
+   else
+   cout<<"此图书编号不存在,请核对!按任意键返回..."<<endl;
+_getch(); system("cls");
+}
+void Print_book() 
+{
+BK *p;
+p=h_book;
+cout<<"图书信息如下:"<<endl;
+ /*直接显示所有图书的信息,遍历图书链表一次就可以了*/
+while(p!=NULL)
+{
+    cout << "图书编号：" << p->book_num << endl;
+    cout << "图书名称:" << p->book_name << endl;
+    cout << "图书作者:" << p->book_writer << endl;
+    cout << "现有量：" << p->book_xy << endl;
+    cout << "库存量:" << p->book_kc << endl;
+    p=p->next;
+}
+cout<<"*图书信息显示完毕!按任意键继续下一步操作*"<<endl;
+_getch();
+system("cls");
+}
+void Print_reader()     
+{
+RD *p;
+int i;
+p=h_reader;
+cout<<"读者信息如下:"<<endl;   
+while(p!=NULL)  /*遍历一次读者链表就可以了*/ 
+{
+   cout<<"读者图书证号:"<< p->reader_num << endl;
+   cout<<"读者姓名:"<<p->reader_name<<endl;
+   for(i=0;i<Max;i++)
+   {
+   cout<<"借书编号:"<< p->borrow[i].borrow_book_num <<endl;
+   cout<<"还书日期:"<< p->borrow[i].huanshu_date<<endl; 
+}
+   cout<<endl;
+   p=p->next;
+}
+cout<<"*读者信息显示完毕!按任意键继续下一步操作*"<<endl;
+_getch();
+system("cls");
+}
+void Borrow_Book() 
+{
+BK *p1; RD *p2;
+char bo_num[10],rea_num[10],huan_date[8];
+int i;
+p1=h_book; p2=h_reader;
+cout<<"*借书模块*"<<endl;
+cout<<"请输入借书的读者图书证号:"<<endl;
+cin >> rea_num;
+while(p2->next!=NULL&&strcmp(rea_num,p2->reader_num)!=0)     /*遍历一次读者链表,判断读者是否存在*/
+   p2=p2->next;
+   if(p2->next==NULL&&strcmp(rea_num,p2->reader_num)!=0)      /*如果存在,则继续,不存在就提示错误!*/
+    { 
+      cout<<"*此读者图书证号不存在!按任意键返回*"<<endl;
+    goto END;
+    } 
+   cout<<"请输入你要借的书的编号:"<<endl;
+   cin >> bo_num;
+   while(strcmp(bo_num,p1->book_num)!=0&&p1->next!=NULL)      /*遍历一次图书链表,判断此图书是否存在*/
+    p1=p1->next;
+     if(p1->next==NULL&&strcmp(bo_num,p1->book_num)!=0)      /*如果存在,则继续,不存在就提示错误!*/
+      {
+       cout<<"*此图书编号不存在!按任意键返回*"<<endl;
+      }
+    else if(p1->book_xy<=0)                 /*判断此图书现在是否还有库存量*/    
+     {
+      cout<<"*抱歉,此书已借完!请等待新书的到来!!按任意键返回*"<<endl;
+     } 
+   else if(p2->zuida>=Max)               /*判断此读者借书权限是否已达最大*/
+    {
+      cout<<"*不好意思,借书数目已满!不能借书!按任意键返回*"<<endl;
+     }
+     else if(strcmp(p2->borrow[0].borrow_book_num,"0")!=0)       /*此读者若已经借书,再判断此读者是否要借两本一样的书*/
+     {
+      for(i=0;i<Max;i++)         /*遍历一次读者所借的书,如果发现有重复,则结束*/
+       {
+        if(strcmp(p2->borrow[i].borrow_book_num,bo_num)==0)
+         {
+           cout<<"抱歉!同一个读者不能同借两本相同的书!"<<endl;
+     }
+        else if(strcmp(p2->borrow[i].borrow_book_num,"0")==0)     /*如果没有重复，则继续*/
+           {
+            cout<<"请输入你要归还图书的日期:"<<endl;
+            cin >> huan_date;
+             strcpy_s(p2->borrow[p2->zuida++].borrow_book_num,bo_num);     /*记录读者所借图书书号,并且借书数目加一,现存量减一*/
+             strcpy_s(p2->borrow[p2->zuida-1].huanshu_date,huan_date);   
+            p1->book_xy--;
+             cout<<"*读者编号借书完毕!按任意键继续下步操作*"<<p2->reader_num<<endl;break;
+           }
+        }
+     }
+     else                    /*若此读者从未借过书*/ 
+     {
+       cout<<"请输入你要归还图书的日期:"<<endl;
+       cin >> huan_date;
+       strcpy_s(p2->borrow[p2->zuida++].borrow_book_num,bo_num);    /*记录所借书号,并且借书数目加一,现存量减一*/
+       strcpy_s(p2->borrow[p2->zuida-1].huanshu_date,huan_date); 
+      p1->book_xy--;
+       cout<<"*读者编号借书完毕!按任意键继续下步操作*"<<p2->reader_num<<endl;
+     }
+      END:_getch(); system("cls");
+}
+void Return_Book() 
+{
+BK *p; RD *q;
+int i,j,find=0;
+char return_book_num[10],return_reader_num[10];
+p=h_book; q=h_reader;
+cout<<"*还书模块*"<<endl;
+cout<<"请输入要还书的读者图书证号:"<<endl;
+cin >> return_reader_num;        
+while(q->next!=NULL&&strcmp(return_reader_num,q->reader_num)!=0) 
+    q=q->next;
+if(q->next==NULL&&strcmp(return_reader_num,q->reader_num)!=0)
+   {
+find=2;/*用于设置标志,判断读者是否借了此书或是否不满足某一条而提前出错结束,若提前出错,则find=2,若借了此图书,则find=1,若没借此书则find=0，以下设置雷同*/
+    cout<<"*此读者编号不存在!按任意键返回*"<<endl;
+     goto end; 
+   }
+   cout<<"请输入读者还书的编号:"<<endl;
+   cin >> return_book_num;
+   while(p->next!=NULL&&strcmp(return_book_num,p->book_num)!=0)
+         p=p->next;
+   if(p->next==NULL&&strcmp(return_book_num,p->book_num)!=0)
+    {
+    find=2;
+      cout<<"*错误!此图书编号不存在!按任意键返回*"<<endl;
+      goto end;
+     } 
+   for(i=0;i<Max;i++)
+    if(strcmp(return_book_num,q->borrow[i].borrow_book_num)==0)    
+      {
+         find=1;   
+         for(j=i;j<Max-1;j++)
+   {
+            strcpy_s(q->borrow[j].borrow_book_num,q->borrow[j+1].borrow_book_num); 
+    strcpy_s(q->borrow[j].huanshu_date,q->borrow[j+1].huanshu_date); 
+   }
+          strcpy_s(q->borrow[Max-1].borrow_book_num,"0");
+   strcpy_s(q->borrow[Max-1].huanshu_date,"0");
+          p->book_xy++;
+          q->zuida--;
+          cout<<"*编号的读者还书完毕!按任意键继续下步操作*"<<return_reader_num<<endl;
+       }
+     if(find==0)    
+      cout<<"*错误!此读者未借此书!按任意键返回*"<<endl;     
+      end: _getch(); system("cls");
+}
+void Save() /*保存信息*/
+{
+Save_Reader();
+Save_Book();
+}
+void Save_Reader()     /*保存读者信息*/
+{
+FILE *fp_reader;     /*创建文件型指针*/
+RD *p,*p0;
+p=h_reader;
+errno_t err;
+err = fopen_s(&fp_reader, "Reader.txt", "wb");
+if(err)   /*创建文件,进行保存*/
+{
+   cout<<"*文件保存失败!请重新启动本系统*"<<endl;
+   exit(0);
+}
+while(p!=NULL) 
+{
+   if(fwrite(p,sizeof(RD),1,fp_reader)!=1)     /*将读者链表中的信息写入文件中*/
+    cout<<"写入文件失败!请重新启动本系统!"<<endl;
+   p0=p;
+   p=p->next;
+   free(p0);                /*释放所有结点*/
+}
+h_reader=NULL;
+fclose(fp_reader);          /*关闭文件*/
+}
+void Save_Book()          /*保存图书信息*/
+{
+FILE *fp_book;           /*创建文件型指针*/
+BK *p,*p0;
+p=h_book;
+errno_t err;
+err = fopen_s(&fp_book, "Book.txt", "wb");
+if(err)      /*创建文件,进行保存*/
+{
+   cout<<"*文件保存失败!请重新启动本系统*"<<endl;
+   exit(0);
+}
+while(p!=NULL) 
+{
+   if(fwrite(p,sizeof(BK),1,fp_book)!=1)                /*将链表中的信息写入文件中*/
+    cout<<"写入文件失败!请重新启动本系统!"<<endl;
+   p0=p;
+   p=p->next;
+   free(p0); 
+}
+h_book=NULL;
+fclose(fp_book); 
+}
+void Load()          /*加载读者信息和图书信息*/
+{
+Load_Reader();
+Load_Book();
+}
+void Load_Reader()             /*加载读者信息*/
+{
+   RD *p1,*p2,*p3;
+   FILE *fp;                 /*创建文件型指针*/
+   errno_t err;
+   err=fopen_s(&fp,"Reader.txt","rb");/*打开文件*/
+   p1=(RD *)malloc(sizeof(RD));
+   fread(p1,sizeof(RD),1,fp);
+   h_reader=p3=p2=p1;
+   while(! feof(fp))     /*读出读者信息,重新链入链表*/
+   { p1=(RD *)malloc(sizeof(RD));
+      fread(p1,sizeof(RD),1,fp);
+      p2->next=p1;
+   p3=p2;
+   p2=p1;
+   }
+   p3->next=NULL;
+   free(p1);
+   fclose(fp);   /*关闭文件*/
+}
+void Load_Book() /*加载图书信息*/
+{
+BK *p1,*p2,*p3;
+FILE *fp;            /*创建文件型指针*/
+errno_t err;
+err=fopen_s(&fp,"Book.txt","rb");   /*打开文件*/
+    p1=(BK *)malloc(sizeof(BK));
+   fread(p1,sizeof(BK),1,fp); 
+    h_book=p3=p2=p1;
+   while(! feof(fp))   /*读出信息,重新链入链表*/
+   { p1=(BK *)malloc(sizeof(BK));
+      fread(p1,sizeof(BK),1,fp);
+      p2->next=p1;
+   p3=p2;
+   p2=p1;
+   }
+   p3->next=NULL;
+    free(p1);
+   fclose(fp);   /*关闭文件*/
+}
+int main() 
+{
+    FILE *fp_book,*fp_reader;              /*创建文件型指针*/
+        system("cls");
+        cout << endl;
+        cout << endl;
+        cout << endl;
+        cout << endl;
+        cout << endl;
+        cout << endl;
+        cout << endl;
+        cout << endl;
+        cout << "                                  =================================================" << endl;
+        cout << "                                  =           欢迎登陆图书馆管理系统              =" << endl;
+        cout << "                                  =          按 任 意 键 进 入 系 统 ...          =" << endl;
+        cout << "                                  =================================================" << endl;
+        _getch();
+        system("cls");
+        errno_t err,errr;
+        err = fopen_s(&fp_book, "Book.txt", "rb");
+        errr = fopen_s(&fp_reader, "Reader.txt", "rb");
+    if(err||errr)
+      {
+            Init();
+       }
+    else Load();
+   Menu_select(); /*调用主菜单*/
+}
